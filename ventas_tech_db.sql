@@ -1,12 +1,40 @@
-CREATE DATABASE Ventas_Tech_DB
-USE Ventas_Tech_DB;
+-- ============================================================
+-- Ventas_Tech_DB
+-- Base de datos de ventas para TechStore
+-- Script completo: DROP TABLES / CREATE TABLES / INSERT DATA
+-- Compatible con PostgreSQL y SQL Server
+-- ============================================================
 
+-- Descomentar la siguiente línea si se ejecuta por primera vez
+-- y aún no existe la base de datos.
+-- CREATE DATABASE Ventas_Tech_DB;
+
+-- ============================================================
+-- 1. DROP TABLES
+-- Se eliminan en orden inverso a las dependencias (FK) para
+-- que el script sea repetible (se pueda correr una y otra vez
+-- sin errores de "no se puede borrar: referenciada por FK").
+-- ============================================================
+DROP TABLE IF EXISTS ventas;
+DROP TABLE IF EXISTS productos;
+DROP TABLE IF EXISTS clientes;
+DROP TABLE IF EXISTS categorias;
+
+-- ============================================================
+-- 2. CREATE TABLES
+-- Orden: primero las tablas de dimensión (sin dependencias),
+-- al final la tabla de hechos (ventas), que depende de todas
+-- las demás.
+-- ============================================================
+
+-- Tabla categorias (dimensión, sin dependencias)
 CREATE TABLE categorias (
     id_categoria     INT PRIMARY KEY,
     nombre_categoria VARCHAR(50) NOT NULL,
     descripcion      VARCHAR(200)
 );
 
+-- Tabla clientes (dimensión, sin dependencias)
 CREATE TABLE clientes (
     id_cliente     INT PRIMARY KEY,
     nombre         VARCHAR(100) NOT NULL,
@@ -15,6 +43,7 @@ CREATE TABLE clientes (
     fecha_registro DATE NOT NULL
 );
 
+-- Tabla productos (depende de categorias)
 CREATE TABLE productos (
     id_producto      INT PRIMARY KEY,
     nombre_producto  VARCHAR(100) NOT NULL,
@@ -26,6 +55,7 @@ CREATE TABLE productos (
         FOREIGN KEY (id_categoria) REFERENCES categorias (id_categoria)
 );
 
+-- Tabla ventas (tabla de hechos: depende de clientes y productos)
 CREATE TABLE ventas (
     id_venta         INT PRIMARY KEY,
     id_cliente       INT,
@@ -41,19 +71,25 @@ CREATE TABLE ventas (
 
 -- ============================================================
 -- 3. INSERT DATA
+-- Orden: primero las tablas sin dependencias (categorias,
+-- clientes), después productos (depende de categorias) y por
+-- último ventas (depende de clientes y productos).
 -- ============================================================
 
+-- categorias — 4 registros
 INSERT INTO categorias VALUES (1, 'Computación', 'Laptops, PCs y monitores');
 INSERT INTO categorias VALUES (2, 'Accesorios', 'Periféricos y complementos');
 INSERT INTO categorias VALUES (3, 'Audio', 'Auriculares y parlantes');
 INSERT INTO categorias VALUES (4, 'Almacenamiento', 'Discos y memorias');
 
+-- clientes — 5 registros
 INSERT INTO clientes VALUES (1, 'María López',  'maria@mail.com',  'Buenos Aires', '2024-01-05');
 INSERT INTO clientes VALUES (2, 'Carlos Ruiz',  'carlos@mail.com', 'Córdoba',      '2024-01-10');
 INSERT INTO clientes VALUES (3, 'Ana Gómez',    'ana@mail.com',    'Rosario',      '2024-02-01');
 INSERT INTO clientes VALUES (4, 'Pedro Sanz',   'pedro@mail.com',  'Mendoza',      '2024-02-15');
 INSERT INTO clientes VALUES (5, 'Laura Torres', 'laura@mail.com',  'Tucumán',      '2024-03-01');
 
+-- productos — 6 registros
 INSERT INTO productos VALUES (1, 'Laptop Pro 15',      1, 1200.00, 15, 1);
 INSERT INTO productos VALUES (2, 'Mouse Inalámbrico',  2,   28.00, 80, 1);
 INSERT INTO productos VALUES (3, 'Monitor 4K 27"',     1,  450.00, 12, 1);
@@ -61,6 +97,7 @@ INSERT INTO productos VALUES (4, 'Auriculares BT Pro', 3,  120.00, 35, 1);
 INSERT INTO productos VALUES (5, 'SSD Externo 1TB',    4,  130.00, 18, 1);
 INSERT INTO productos VALUES (6, 'Teclado Mecánico',   2,   95.00, 40, 1);
 
+-- ventas — 10 registros
 INSERT INTO ventas VALUES (1,  1, 1, 2, 1200.00, '2024-03-05');
 INSERT INTO ventas VALUES (2,  2, 2, 5,   28.00, '2024-03-06');
 INSERT INTO ventas VALUES (3,  3, 3, 1,  450.00, '2024-03-07');
@@ -72,10 +109,11 @@ INSERT INTO ventas VALUES (8,  3, 2, 8,   28.00, '2024-03-13');
 INSERT INTO ventas VALUES (9,  4, 4, 1,  120.00, '2024-03-14');
 INSERT INTO ventas VALUES (10, 5, 3, 2,  450.00, '2024-03-15');
 
-SELECT 'categorias' AS tabla, COUNT(*) AS filas FROM categorias
-UNION ALL SELECT 'clientes', COUNT(*) FROM clientes
-UNION ALL SELECT 'productos', COUNT(*) FROM productos
-UNION ALL SELECT 'ventas', COUNT(*) FROM ventas;
-
--- Debe FALLAR: producto inexistente
--- INSERT INTO ventas VALUES (11, 1, 999, 1, 10.00, '2024-04-01');
+-- ============================================================
+-- 4. VERIFICACIÓN (opcional, no forma parte del DDL/DML pedido,
+-- pero sirve para confirmar que todo cargó bien)
+-- ============================================================
+-- SELECT * FROM categorias;
+-- SELECT * FROM clientes;
+-- SELECT * FROM productos;
+-- SELECT * FROM ventas;
